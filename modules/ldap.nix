@@ -61,6 +61,19 @@ in {
         };
 
         children = {
+          # Grant root (via Unix socket EXTERNAL auth) full access to cn=config.
+          # Without this entry, ldapmodify -Y EXTERNAL on ldapi:/// gets
+          # "Insufficient access (50)" when trying to modify the config DIT.
+          "olcDatabase={0}config" = {
+            attrs = {
+              objectClass = "olcDatabaseConfig";
+              olcDatabase = "{0}config";
+              olcAccess = [
+                "{0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage stop by * none stop"
+              ];
+            };
+          };
+
           "cn=schema" = {
             includes = [
               "${pkgs.openldap}/etc/schema/core.ldif"
