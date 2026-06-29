@@ -104,8 +104,11 @@ in {
               # Password is loaded at runtime via a slapd password file
               olcRootPW    = { path = config.age.secrets.ldapAdminPassword.path; };
               olcAccess    = [
-                # KDC service account gets write access to Kerberos subtree
-                ''to dn.subtree="cn=kerberos,${cfg.baseDN}" by dn="cn=kdc,${cfg.baseDN}" write by * none''
+                # Both KDC and kadmin service accounts need write access to
+                # the Kerberos subtree.  Granting only cn=kdc causes kadmind
+                # and kadmin.local to fail with "Unable to read Realm: No
+                # such object" because cn=kadmin falls through to "by * none".
+                ''to dn.subtree="cn=kerberos,${cfg.baseDN}" by dn="cn=kdc,${cfg.baseDN}" write by dn="cn=kadmin,${cfg.baseDN}" write by * none''
                 ''to * by self write by users read by anonymous auth''
               ];
             };

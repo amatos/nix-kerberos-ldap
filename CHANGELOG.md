@@ -28,6 +28,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `modules/ldap.nix` — Kerberos subtree ACL now grants write to both
+  `cn=kdc` and `cn=kadmin`; granting only `cn=kdc` caused kadmind and
+  `kadmin.local` to fail with "Unable to read Realm: No such object"
+  because `cn=kadmin` fell through to `by * none`
 - `modules/ldap.nix` — `mutableConfig = true` added; without this the NixOS
   openldap module runs `chmod -R u+r-w` on slapd.d after every activation,
   making all cn=config files read-only and causing any `ldapmodify` to fail
