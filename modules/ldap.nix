@@ -35,6 +35,12 @@ in {
       description = "Path to the age-encrypted file containing the KDC service account password (from nix-secrets).";
       default     = "${nix-secrets}/ldap-kdc-password.age";
     };
+
+    krb5Package = lib.mkOption {
+      type        = lib.types.package;
+      default     = pkgs.krb5;
+      description = "krb5 package to source the Kerberos LDAP schema from. Must be built with LDAP support (withLdap = true).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -65,7 +71,7 @@ in {
               "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
               "${pkgs.openldap}/etc/schema/nis.ldif"
               # Kerberos schema — provided by krb5 package
-              "${pkgs.krb5}/share/examples/kerberos/kerberos.schema"
+              "${cfg.krb5Package}/share/examples/kerberos/kerberos.schema"
             ];
           };
 

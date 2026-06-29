@@ -36,6 +36,12 @@ in {
       description = "Path to the age-encrypted KDC LDAP service account password (from nix-secrets).";
       default     = "${nix-secrets}/ldap-kdc-password.age";
     };
+
+    krb5Package = lib.mkOption {
+      type        = lib.types.package;
+      default     = pkgs.krb5;
+      description = "krb5 package providing krb5kdc and kadmind. Must be built with LDAP support (withLdap = true).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -90,7 +96,7 @@ in {
       wantedBy    = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart     = "${pkgs.krb5}/bin/krb5kdc -n";
+        ExecStart     = "${cfg.krb5Package}/bin/krb5kdc -n";
         Restart       = "on-failure";
         # Master key stash file must exist before starting;
         # run `kdb5_ldap_util stashsrvpw` and `kdb5_util create` during provisioning.
@@ -106,11 +112,11 @@ in {
       wantedBy    = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = "${pkgs.krb5}/bin/kadmind -nofork";
+        ExecStart = "${cfg.krb5Package}/bin/kadmind -nofork";
         Restart   = "on-failure";
       };
     };
 
-    environment.systemPackages = [ pkgs.krb5 ];
+    environment.systemPackages = [ cfg.krb5Package ];
   };
 }
