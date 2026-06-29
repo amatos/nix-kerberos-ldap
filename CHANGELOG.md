@@ -28,6 +28,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `modules/ldap.nix` — `mutableConfig = true` added; without this the NixOS
+  openldap module runs `chmod -R u+r-w` on slapd.d after every activation,
+  making all cn=config files read-only and causing any `ldapmodify` to fail
+  with error (80) `LDAP_OTHER` when the backend tries to persist the change
 - `modules/ldap.nix` — default secret paths removed erroneous
   `secrets/` subdirectory prefix; secrets live at the nix-secrets root
 - `modules/ldap.nix` — `olcRootPW` changed from invalid

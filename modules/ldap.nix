@@ -49,7 +49,14 @@ in {
     };
 
     services.openldap = {
-      enable    = true;
+      enable        = true;
+      # mutableConfig = true: NixOS only initialises slapd.d if it does not
+      # already exist; it does NOT chmod the directory read-only on every
+      # activation.  This is required so that ldapmodify -Y EXTERNAL can
+      # persist changes (e.g. setting a hashed olcRootPW).  Without this the
+      # backend returns error (80) on any modify because the slapd.d files
+      # are unwritable.
+      mutableConfig = true;
       urlList   = [
         "ldap://127.0.0.1:${toString cfg.port}/"
         "ldapi:///"   # required for SASL EXTERNAL (rootpw management)
