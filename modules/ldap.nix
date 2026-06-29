@@ -121,10 +121,16 @@ in {
       # backend returns error (80) on any modify because the slapd.d files
       # are unwritable.
       mutableConfig = true;
-      urlList = [
-        "ldap://127.0.0.1:${toString cfg.port}/"
-        "ldapi:///"   # required for SASL EXTERNAL (rootpw management)
-      ] ++ cfg.listenAddresses;
+      # ldapi:/// is always included (needed for SASL EXTERNAL / rootpw
+      # management).  When listenAddresses is non-empty it fully replaces
+      # the default ldap://127.0.0.1/ entry to avoid double-binding port
+      # 389 when the caller passes ldap://0.0.0.0/ (0.0.0.0 includes
+      # 127.0.0.1, so having both causes errno=98 at startup).
+      urlList = [ "ldapi:///" ] ++ (
+        if cfg.listenAddresses != [ ]
+        then cfg.listenAddresses
+        else [ "ldap://127.0.0.1:${toString cfg.port}/" ]
+      );
 
       settings = {
         attrs = {
