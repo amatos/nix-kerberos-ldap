@@ -6,8 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- `kerberos.schema` — bundled Kerberos LDAP schema (Novell/MIT); nixpkgs
-  does not install this file even with `krb5.override { withLdap = true }`
+- `kerberos.schema` — bundled Kerberos LDAP schema (Novell/MIT) in old
+  slapd.conf format; kept as the human-readable reference source
+- `kerberos.ldif` — Kerberos schema in cn=config LDIF format; this is
+  what `services.openldap.settings` includes feed to `slapadd` via
+  `include: file://` directives; static file avoids the operational
+  attributes (`entryUUID`, `creatorsName`, etc.) that `slaptest -F`
+  injects and that cause slapadd to fail
 - `modules/kerberos.nix` — `krb5Package` option; used for `krb5kdc`,
   `kadmind` `ExecStart` paths and `environment.systemPackages`
 
@@ -20,11 +25,11 @@ All notable changes to this project will be documented in this file.
   `services.openldap.settings`
 - `modules/kerberos.nix` — default secret paths removed erroneous
   `secrets/` subdirectory prefix
-- `modules/ldap.nix` — Kerberos schema converted to cn=config LDIF at
-  build time via `pkgs.runCommand` + `slaptest`; NixOS's openldap
-  module feeds `includes` to `slapadd` which requires LDIF format — the
-  old `.schema` format caused `str2entry: entry -1 has no dn` failures;
-  removed `krb5Package` option (was only used for the now-non-existent
-  nixpkgs schema path)
+- `modules/ldap.nix` — Kerberos schema include now uses
+  `${../kerberos.ldif}` (static cn=config LDIF); removed `krb5Package`
+  option (was only used for the no-longer-referenced nixpkgs schema
+  path); the `.schema` format fails with `str2entry: entry -1 has no dn`
+  and the `slaptest -F` LDIF fails with `not configured to hold
+  'cn=kerberos'` due to injected operational attributes
 - `modules/kerberos.nix` — `ExecStart` and `systemPackages` now use
   `cfg.krb5Package` instead of hardcoded `pkgs.krb5`

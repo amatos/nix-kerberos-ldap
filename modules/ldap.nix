@@ -2,26 +2,6 @@
 
 let
   cfg = config.services.kerberosLdap.ldap;
-
-  # Convert the bundled kerberos.schema (old slapd.conf format) to the
-  # cn=config LDIF format that services.openldap.settings expects.
-  # slapadd (used by NixOS's openldap module) only accepts LDIF; the old
-  # .schema format causes "str2entry: entry -1 has no dn" parse failures.
-  kerberosSchemaLdif = pkgs.runCommand "kerberos-schema.ldif" {
-    nativeBuildInputs = [ pkgs.openldap ];
-  } ''
-    mkdir -p schema cnconfig
-    cp ${../kerberos.schema} schema/kerberos.schema
-    echo "include $(pwd)/schema/kerberos.schema" > slapd.conf
-    slaptest -f slapd.conf -F cnconfig 2>/dev/null || \
-      { echo "slaptest failed to convert kerberos.schema" >&2; exit 1; }
-    schemaFile=$(find cnconfig -name '*kerberos*' | head -1)
-    # Strip the {N} ordering prefix from DN/cn for a stable output path
-    sed \
-      -e 's/^dn: cn={[0-9]*}kerberos/dn: cn=kerberos/' \
-      -e 's/^cn: {[0-9]*}kerberos/cn: kerberos/' \
-      "$schemaFile" > "$out"
-  '';
 in {
   options.services.kerberosLdap.ldap = {
     enable = lib.mkEnableOption "OpenLDAP server with Kerberos schema";
@@ -84,9 +64,10 @@ in {
               "${pkgs.openldap}/etc/schema/cosine.ldif"
               "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
               "${pkgs.openldap}/etc/schema/nis.ldif"
-              # Kerberos schema — converted to cn=config LDIF at build time
-              # (nixpkgs does not ship kerberos.schema; .schema format fails slapadd)
-              "${kerberosSchemaLdif}"
+              # Kerberos schema in cn=config LDIF format — bundled statically
+              # (nixpkgs does not ship this; .schema format fails slapadd;
+              # slaptest output has operational attrs that also fail slapadd)
+              "${../kerberos.ldif}"
             ];
           };
 
