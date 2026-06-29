@@ -48,6 +48,27 @@ in {
       default     = "${nix-secrets}/ldap-kdc-password.age";
     };
 
+    tlsCertFile = lib.mkOption {
+      type        = lib.types.nullOr lib.types.path;
+      default     = null;
+      description = ''
+        Path to the TLS certificate file (fullchain) for slapd LDAPS.
+        Must be readable by the openldap user at runtime — typically
+        deployed by a certbot hook into a directory owned by openldap.
+        When set, olcTLSCertificateFile is added to cn=config on
+        initial setup; on an existing slapd apply via ldapmodify.
+      '';
+    };
+
+    tlsKeyFile = lib.mkOption {
+      type        = lib.types.nullOr lib.types.path;
+      default     = null;
+      description = ''
+        Path to the TLS private key file for slapd LDAPS.  Must be
+        readable by the openldap user.  Set together with tlsCertFile.
+      '';
+    };
+
     saslKeytabFile = lib.mkOption {
       type        = lib.types.nullOr lib.types.path;
       default     = null;
@@ -142,6 +163,10 @@ in {
           olcSaslHost = cfg.saslHost;
         } // lib.optionalAttrs (cfg.saslAuthzRegexp != [ ]) {
           olcAuthzRegexp = cfg.saslAuthzRegexp;
+        } // lib.optionalAttrs (cfg.tlsCertFile != null) {
+          olcTLSCertificateFile = cfg.tlsCertFile;
+        } // lib.optionalAttrs (cfg.tlsKeyFile != null) {
+          olcTLSCertificateKeyFile = cfg.tlsKeyFile;
         };
 
         children = {

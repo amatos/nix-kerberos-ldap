@@ -47,6 +47,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `modules/ldap.nix` — `tlsCertFile` and `tlsKeyFile` options: paths to
+  the TLS certificate and key for slapd LDAPS; added to `olcTLSCertificateFile`
+  and `olcTLSCertificateKeyFile` in cn=config on initial setup (existing
+  installs require ldapmodify); cert must be readable by openldap user
 - `modules/kerberos.nix` — `rdns = false` added to `[libdefaults]` in
   generated krb5.conf; without this libkrb5 reverse-resolves the
   server IP to the short hostname and constructs the wrong service
