@@ -28,13 +28,13 @@ in {
     masterKeyFile = lib.mkOption {
       type        = lib.types.path;
       description = "Path to the age-encrypted Kerberos master key file (from nix-secrets).";
-      default     = "${nix-secrets}/secrets/krb5-master-key.age";
+      default     = "${nix-secrets}/krb5-master-key.age";
     };
 
     kdcLdapPasswordFile = lib.mkOption {
       type        = lib.types.path;
       description = "Path to the age-encrypted KDC LDAP service account password (from nix-secrets).";
-      default     = "${nix-secrets}/secrets/ldap-kdc-password.age";
+      default     = "${nix-secrets}/ldap-kdc-password.age";
     };
   };
 

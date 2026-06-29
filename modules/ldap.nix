@@ -27,13 +27,13 @@ in {
     adminPasswordFile = lib.mkOption {
       type        = lib.types.path;
       description = "Path to the age-encrypted file containing the LDAP admin password (from nix-secrets).";
-      default     = "${nix-secrets}/secrets/ldap-admin-password.age";
+      default     = "${nix-secrets}/ldap-admin-password.age";
     };
 
     kdcPasswordFile = lib.mkOption {
       type        = lib.types.path;
       description = "Path to the age-encrypted file containing the KDC service account password (from nix-secrets).";
-      default     = "${nix-secrets}/secrets/ldap-kdc-password.age";
+      default     = "${nix-secrets}/ldap-kdc-password.age";
     };
   };
 
@@ -77,7 +77,7 @@ in {
               olcSuffix    = cfg.baseDN;
               olcRootDN    = "cn=admin,${cfg.baseDN}";
               # Password is loaded at runtime via a slapd password file
-              olcRootPW    = { _secret = config.age.secrets.ldapAdminPassword.path; };
+              olcRootPW    = { path = config.age.secrets.ldapAdminPassword.path; };
               olcAccess    = [
                 # KDC service account gets write access to Kerberos subtree
                 ''to dn.subtree="cn=kerberos,${cfg.baseDN}" by dn="cn=kdc,${cfg.baseDN}" write by * none''
