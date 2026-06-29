@@ -100,6 +100,12 @@ in {
         admin_server = FILE:/var/log/krb5/kadmin.log
     '';
 
+    # Grant */admin principals full kadmin rights over the network.
+    # Without this file kadmind starts but denies all admin operations.
+    environment.etc."krb5kdc/kadm5.acl".text = ''
+      */admin@${cfg.realm}	*
+    '';
+
     systemd.services.kdc = {
       description = "MIT Kerberos KDC";
       after       = [ "network.target" "openldap.service" ];
