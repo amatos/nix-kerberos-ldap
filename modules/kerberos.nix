@@ -37,6 +37,17 @@ in {
       default     = "${nix-secrets}/ldap-kdc-password.age";
     };
 
+    ldapServicePasswordFile = lib.mkOption {
+      type        = lib.types.path;
+      default     = "/var/lib/krb5kdc/service.keyfile";
+      description = ''
+        Path to the binary stash file created by kdb5_ldap_util stashsrvpw.
+        This is NOT the plaintext password — it is the binary format that
+        MIT Kerberos reads at runtime to bind to LDAP.
+        Bootstrap: kdb5_ldap_util stashsrvpw -f <this path> cn=kdc,<baseDN>
+      '';
+    };
+
     krb5Package = lib.mkOption {
       type        = lib.types.package;
       default     = pkgs.krb5;
@@ -80,7 +91,7 @@ in {
           ldap_kerberos_container_dn = cn=kerberos,${cfg.ldapBaseDN}
           ldap_kdc_dn = cn=kdc,${cfg.ldapBaseDN}
           ldap_kadmind_dn = cn=kadmin,${cfg.ldapBaseDN}
-          ldap_service_password_file = ${config.age.secrets.kdcLdapPassword.path}
+          ldap_service_password_file = ${cfg.ldapServicePasswordFile}
           ldap_servers = ${cfg.ldapUri}
         }
 

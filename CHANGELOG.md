@@ -15,6 +15,11 @@ All notable changes to this project will be documented in this file.
   injects and that cause slapadd to fail
 - `modules/kerberos.nix` — `krb5Package` option; used for `krb5kdc`,
   `kadmind` `ExecStart` paths and `environment.systemPackages`
+- `modules/kerberos.nix` — `ldapServicePasswordFile` option (default
+  `/var/lib/krb5kdc/service.keyfile`); separates the binary stash file
+  path from the age-encrypted plaintext secret — MIT Kerberos requires
+  the binary stash format written by `kdb5_ldap_util stashsrvpw`, not
+  the raw plaintext password
 
 ### Fixed
 
