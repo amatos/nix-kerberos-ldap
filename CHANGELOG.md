@@ -20,14 +20,11 @@ All notable changes to this project will be documented in this file.
 - `modules/ldap.nix` — `KRB5_KTNAME` set in the openldap systemd service
   environment when `saslKeytabFile` is configured; directs libkrb5 to the
   dedicated slapd keytab rather than the system default
-- `modules/ldap.nix` — `listenAddresses` option: extra URLs appended to
-  slapd's urlList beyond the default `ldap://127.0.0.1/` and `ldapi:///`;
-  needed to expose slapd on Tailscale/LAN so GSSAPI clients can connect
-  via the FQDN (GSSAPI derives the service principal from the URL hostname,
-  so clients must connect by name, not by 127.0.0.1)
-
-
-
+- `modules/ldap.nix` — `listenAddresses` option: replaces the default
+  `ldap://127.0.0.1/` TCP entry (while keeping `ldapi:///`); use to
+  expose slapd on Tailscale/LAN so GSSAPI clients can reach it via FQDN
+  (GSSAPI derives the service principal from the URL hostname, so
+  clients must connect by name, not 127.0.0.1)
 - `kerberos.schema` — bundled Kerberos LDAP schema (Novell/MIT) in old
   slapd.conf format; kept as the human-readable reference source
 - `kerberos.ldif` — Kerberos schema in cn=config LDIF format; this is
@@ -50,6 +47,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `modules/ldap.nix` — `listenAddresses` now replaces the default
+  `ldap://127.0.0.1/` TCP entry rather than appending to it; appending
+  `ldap://0.0.0.0/` alongside `ldap://127.0.0.1/` caused slapd to
+  attempt binding port 389 twice (errno=98, Address already in use)
 - `modules/kerberos.nix` — `LogsDirectory = "krb5"` added to kadmind
   service so it can write to `/var/log/krb5/kadmin.log` (was only set
   on kdc.service)
