@@ -24,6 +24,18 @@ in {
       description = "Port for slapd to listen on.";
     };
 
+    listenAddresses = lib.mkOption {
+      type    = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = ''
+        Extra LDAP URLs for slapd to listen on, in addition to
+        ldap://127.0.0.1:<port>/ and ldapi:///.  Use to expose slapd on
+        the Tailscale or LAN interface so that remote clients and GSSAPI
+        can reach it via the FQDN.  Example:
+          [ "ldap://0.0.0.0:389/" ]
+      '';
+    };
+
     adminPasswordFile = lib.mkOption {
       type        = lib.types.path;
       description = "Path to the age-encrypted file containing the LDAP admin password (from nix-secrets).";
@@ -34,6 +46,43 @@ in {
       type        = lib.types.path;
       description = "Path to the age-encrypted file containing the KDC service account password (from nix-secrets).";
       default     = "${nix-secrets}/ldap-kdc-password.age";
+    };
+
+    saslKeytabFile = lib.mkOption {
+      type        = lib.types.nullOr lib.types.path;
+      default     = null;
+      description = ''
+        Path to the age-encrypted keytab for slapd SASL/GSSAPI (the
+        ldap/ service principal).  Deployed with openldap ownership so
+        slapd can read it at runtime.  The host keytab
+        (/etc/krb5.keytab) is not usable here because slapd does not
+        run as root.
+      '';
+    };
+
+    saslHost = lib.mkOption {
+      type        = lib.types.str;
+      default     = "";
+      description = ''
+        Hostname for SASL service-principal lookup (olcSaslHost).  Must
+        match the hostname component of the ldap/ principal in the
+        keytab, e.g. "porkchop.ts.matos.cc" for the principal
+        ldap/porkchop.ts.matos.cc@REALM.  Leave empty to let slapd use
+        the system hostname (gethostname).
+      '';
+    };
+
+    saslAuthzRegexp = lib.mkOption {
+      type        = lib.types.listOf lib.types.str;
+      default     = [ ];
+      description = ''
+        olcAuthzRegexp entries mapping SASL/GSSAPI identities to LDAP
+        DNs.  Each string is "<match-regex> <replace-dn>" exactly as
+        accepted by ldapmodify.  The regex matches the SASL identity
+        presented by Cyrus SASL — for GSSAPI/Kerberos this is
+        "uid=<principal>,cn=<REALM>,cn=gssapi,cn=auth".  Example:
+          "{0}uid=alberth,cn=[^,]*,cn=gssapi,cn=auth cn=admin,dc=example,dc=com"
+      '';
     };
   };
 
@@ -48,6 +97,21 @@ in {
       owner = "openldap";
     };
 
+    # slapd SASL/GSSAPI keytab — deployed with openldap ownership so the
+    # daemon can read it; /etc/krb5.keytab is root-only and cannot be used.
+    age.secrets.ldapSaslKeytab = lib.mkIf (cfg.saslKeytabFile != null) {
+      file  = cfg.saslKeytabFile;
+      owner = "openldap";
+      mode  = "0600";
+    };
+
+    # Point slapd at its dedicated keytab via the environment.  This is
+    # evaluated after agenix has written the secret, so the path is valid
+    # by the time slapd starts.
+    systemd.services.openldap = lib.mkIf (cfg.saslKeytabFile != null) {
+      environment.KRB5_KTNAME = config.age.secrets.ldapSaslKeytab.path;
+    };
+
     services.openldap = {
       enable        = true;
       # mutableConfig = true: NixOS only initialises slapd.d if it does not
@@ -57,14 +121,21 @@ in {
       # backend returns error (80) on any modify because the slapd.d files
       # are unwritable.
       mutableConfig = true;
-      urlList   = [
+      urlList = [
         "ldap://127.0.0.1:${toString cfg.port}/"
         "ldapi:///"   # required for SASL EXTERNAL (rootpw management)
-      ];
+      ] ++ cfg.listenAddresses;
 
       settings = {
         attrs = {
           olcLogLevel = "stats";
+          # SASL/GSSAPI — only included when the corresponding options are set.
+          # On an existing slapd these must be applied via ldapmodify
+          # (mutableConfig = true means Nix only initialises slapd.d once).
+        } // lib.optionalAttrs (cfg.saslHost != "") {
+          olcSaslHost = cfg.saslHost;
+        } // lib.optionalAttrs (cfg.saslAuthzRegexp != [ ]) {
+          olcAuthzRegexp = cfg.saslAuthzRegexp;
         };
 
         children = {

@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `modules/ldap.nix` — `saslKeytabFile` option: age-encrypted keytab for
+  the slapd `ldap/` service principal; deployed with `openldap` ownership
+  so the daemon can read it (`/etc/krb5.keytab` is root-only and cannot
+  be reused for this purpose)
+- `modules/ldap.nix` — `saslHost` option: sets `olcSaslHost` in cn=config
+  to match the hostname component of the `ldap/` service principal (e.g.
+  `porkchop.ts.matos.cc`); used by Cyrus SASL to find the correct
+  keytab entry during GSSAPI negotiation
+- `modules/ldap.nix` — `saslAuthzRegexp` option: populates `olcAuthzRegexp`
+  in cn=config; maps Kerberos principal names (presented by Cyrus SASL as
+  `uid=<user>,cn=<REALM>,cn=gssapi,cn=auth`) to LDAP DNs
+- `modules/ldap.nix` — `KRB5_KTNAME` set in the openldap systemd service
+  environment when `saslKeytabFile` is configured; directs libkrb5 to the
+  dedicated slapd keytab rather than the system default
+- `modules/ldap.nix` — `listenAddresses` option: extra URLs appended to
+  slapd's urlList beyond the default `ldap://127.0.0.1/` and `ldapi:///`;
+  needed to expose slapd on Tailscale/LAN so GSSAPI clients can connect
+  via the FQDN (GSSAPI derives the service principal from the URL hostname,
+  so clients must connect by name, not by 127.0.0.1)
+
+
+
 - `kerberos.schema` — bundled Kerberos LDAP schema (Novell/MIT) in old
   slapd.conf format; kept as the human-readable reference source
 - `kerberos.ldif` — Kerberos schema in cn=config LDIF format; this is
