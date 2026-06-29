@@ -47,6 +47,11 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- `modules/kerberos.nix` — `rdns = false` added to `[libdefaults]` in
+  generated krb5.conf; without this libkrb5 reverse-resolves the
+  server IP to the short hostname and constructs the wrong service
+  principal (e.g. `ldap/porkchop` instead of
+  `ldap/porkchop.ts.matos.cc`) when connecting via Tailscale FQDN
 - `modules/ldap.nix` — `listenAddresses` now replaces the default
   `ldap://127.0.0.1/` TCP entry rather than appending to it; appending
   `ldap://0.0.0.0/` alongside `ldap://127.0.0.1/` caused slapd to

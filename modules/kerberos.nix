@@ -73,6 +73,16 @@ in {
         default_realm = ${cfg.realm}
         dns_lookup_realm = false
         dns_lookup_kdc = false
+        # Do not canonicalize service hostnames via DNS.  By default
+        # libkrb5 forward-resolves the hostname to an IP then
+        # reverse-resolves it back to a (possibly short) name, which
+        # produces the wrong service principal when connecting via a
+        # Tailscale FQDN (ldap/porkchop instead of
+        # ldap/porkchop.ts.matos.cc).  Both settings are required:
+        # dns_canonicalize_hostname suppresses the forward lookup;
+        # rdns suppresses the reverse lookup.
+        dns_canonicalize_hostname = false
+        rdns = false
 
       [realms]
         ${cfg.realm} = {
