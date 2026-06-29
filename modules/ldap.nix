@@ -50,7 +50,10 @@ in {
 
     services.openldap = {
       enable    = true;
-      urlList   = [ "ldap://127.0.0.1:${toString cfg.port}/" ];
+      urlList   = [
+        "ldap://127.0.0.1:${toString cfg.port}/"
+        "ldapi:///"   # required for SASL EXTERNAL (rootpw management)
+      ];
 
       settings = {
         attrs = {

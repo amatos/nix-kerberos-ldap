@@ -13,6 +13,10 @@ All notable changes to this project will be documented in this file.
   `include: file://` directives; static file avoids the operational
   attributes (`entryUUID`, `creatorsName`, etc.) that `slaptest -F`
   injects and that cause slapadd to fail
+- `modules/ldap.nix` — `ldapi:///` added to urlList; required for
+  SASL EXTERNAL auth (root on Unix socket bypasses olcRootPW, needed
+  because `{ path = ... }` stores the password with a trailing newline
+  that breaks simple bind authentication)
 - `modules/kerberos.nix` — `krb5Package` option; used for `krb5kdc`,
   `kadmind` `ExecStart` paths and `environment.systemPackages`
 - `modules/kerberos.nix` — `ldapServicePasswordFile` option (default
