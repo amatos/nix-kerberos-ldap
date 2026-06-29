@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 26.06.01
+
 ### Added
 
 - `modules/ldap.nix` — `saslKeytabFile` option: age-encrypted keytab for
