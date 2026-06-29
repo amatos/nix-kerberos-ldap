@@ -95,6 +95,9 @@ in {
           ldap_servers = ${cfg.ldapUri}
         }
 
+      [kadmin]
+        acl_file = /etc/krb5kdc/kadm5.acl
+
       [logging]
         kdc          = FILE:/var/log/krb5/kdc.log
         admin_server = FILE:/var/log/krb5/kadmin.log
@@ -129,8 +132,9 @@ in {
       wantedBy    = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = "${cfg.krb5Package}/bin/kadmind -nofork";
-        Restart   = "on-failure";
+        ExecStart     = "${cfg.krb5Package}/bin/kadmind -nofork";
+        Restart       = "on-failure";
+        LogsDirectory = "krb5";
       };
     };
 

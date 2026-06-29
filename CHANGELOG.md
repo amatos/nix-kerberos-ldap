@@ -28,9 +28,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- `modules/kerberos.nix` — `kadm5.acl` now written to
-  `/etc/krb5kdc/kadm5.acl` granting `*/admin@<realm>` full rights;
-  without this kadmind starts but rejects all network admin operations
+- `modules/kerberos.nix` — `LogsDirectory = "krb5"` added to kadmind
+  service so it can write to `/var/log/krb5/kadmin.log` (was only set
+  on kdc.service)
+- `modules/kerberos.nix` — `kadm5.acl` written to `/etc/krb5kdc/kadm5.acl`
+  granting `*/admin@<realm>` full rights; `[kadmin] acl_file` added to
+  krb5.conf pointing kadmind at that path (default is
+  `/var/lib/krb5kdc/kadm5.acl` which is not managed by NixOS)
 - `modules/ldap.nix` — Kerberos subtree ACL now grants write to both
   `cn=kdc` and `cn=kadmin`; granting only `cn=kdc` caused kadmind and
   `kadmin.local` to fail with "Unable to read Realm: No such object"
