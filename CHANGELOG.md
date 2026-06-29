@@ -20,8 +20,11 @@ All notable changes to this project will be documented in this file.
   `services.openldap.settings`
 - `modules/kerberos.nix` — default secret paths removed erroneous
   `secrets/` subdirectory prefix
-- `modules/ldap.nix` — Kerberos schema include now references
-  `${../kerberos.schema}` (bundled); removed `krb5Package` option that
-  was only used for the now-non-existent nixpkgs schema path
+- `modules/ldap.nix` — Kerberos schema converted to cn=config LDIF at
+  build time via `pkgs.runCommand` + `slaptest`; NixOS's openldap
+  module feeds `includes` to `slapadd` which requires LDIF format — the
+  old `.schema` format caused `str2entry: entry -1 has no dn` failures;
+  removed `krb5Package` option (was only used for the now-non-existent
+  nixpkgs schema path)
 - `modules/kerberos.nix` — `ExecStart` and `systemPackages` now use
   `cfg.krb5Package` instead of hardcoded `pkgs.krb5`
